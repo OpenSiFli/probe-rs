@@ -1,4 +1,4 @@
-use crate::Error as ProbeRsError;
+use crate::{CoreStatus, Error as ProbeRsError};
 use crate::MemoryInterface;
 use crate::architecture::arm::ap::{
     AccessPortType, ApRegister, CFG, CSW, IDR, MemoryApType, memory_ap,
@@ -212,6 +212,13 @@ impl ArmMemoryInterface for SifliUartMemoryInterface<'_> {
         Err(ArmError::Probe(DebugProbeError::InterfaceNotAvailable {
             interface_name: "ARM",
         }))
+    }
+    
+    fn update_core_status(&mut self, state: CoreStatus) {
+        // 当出现Unknow的时候，重新初始化
+        if state == CoreStatus::Unknown {
+            self.probe.probe.command(SifliUartCommand::Enter).unwrap();
+        }
     }
 }
 

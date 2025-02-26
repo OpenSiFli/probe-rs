@@ -16,13 +16,13 @@ use std::time::{Duration, Instant};
 
 const START_WORD: [u8; 2] = [0x7E, 0x79];
 
-const DEFUALT_RECV_TIMEOUT: Duration = Duration::from_secs(1);
+const DEFUALT_RECV_TIMEOUT: Duration = Duration::from_secs(2);
 
 const DEFUALT_UART_BAUD: u32 = 1000000;
 
 #[allow(dead_code)]
 #[derive(Debug)]
-enum SifliUartCommand<'a> {
+pub(crate) enum SifliUartCommand<'a> {
     Enter,
     Exit,
     MEMRead { addr: u32, len: u16 },
@@ -138,11 +138,11 @@ impl SifliUart {
         }
 
         let header = Self::create_header(send_data.len() as u16);
-        tracing::info!("Send header: {:?}", header);
+        // tracing::info!("Send header: {:?}", header);
         writer
             .write_all(&header)
             .map_err(CommandError::ProbeError)?;
-        tracing::info!("Send data: {:?}", send_data);
+        // tracing::info!("Send data: {:?}", send_data);
         writer
             .write_all(&send_data)
             .map_err(CommandError::ProbeError)?;
@@ -158,7 +158,7 @@ impl SifliUart {
         let mut buffer = vec![];
         let mut recv_data = vec![];
 
-        tracing::info!("Start recv");
+        // tracing::info!("Start recv");
 
         loop {
             if start_time.elapsed() >= DEFUALT_RECV_TIMEOUT {
@@ -173,7 +173,7 @@ impl SifliUart {
                 continue;
             }
             buffer.push(byte[0]);
-            tracing::info!("Recv buffer: {:?}", buffer);
+            // tracing::info!("Recv buffer: {:?}", buffer);
 
             if buffer.ends_with(&START_WORD) {
                 let err = Err(CommandError::ParameterError(std::io::Error::new(

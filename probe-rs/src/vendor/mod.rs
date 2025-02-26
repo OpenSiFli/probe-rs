@@ -30,6 +30,7 @@ pub mod silabs;
 pub mod st;
 pub mod ti;
 pub mod vorago;
+pub mod sifli;
 
 /// Vendor support trait.
 pub trait Vendor: Send + Sync + std::fmt::Display {
@@ -75,6 +76,7 @@ static VENDORS: LazyLock<RwLock<Vec<Box<dyn Vendor>>>> = LazyLock::new(|| {
         Box::new(nxp::Nxp),
         Box::new(st::St),
         Box::new(vorago::Vorago),
+        Box::new(sifli::Sifli),
     ];
 
     RwLock::new(vendors)
