@@ -138,9 +138,11 @@ impl SifliUart {
         }
 
         let header = Self::create_header(send_data.len() as u16);
+        tracing::info!("Send header: {:?}", header);
         writer
             .write_all(&header)
             .map_err(CommandError::ProbeError)?;
+        tracing::info!("Send data: {:?}", send_data);
         writer
             .write_all(&send_data)
             .map_err(CommandError::ProbeError)?;
@@ -155,6 +157,8 @@ impl SifliUart {
         let start_time = Instant::now();
         let mut buffer = vec![];
         let mut recv_data = vec![];
+        
+        tracing::info!("Start recv");
 
         loop {
             if start_time.elapsed() >= DEFUALT_RECV_TIMEOUT {
@@ -169,6 +173,7 @@ impl SifliUart {
                 continue;
             }
             buffer.push(byte[0]);
+            tracing::info!("Recv buffer: {:?}", buffer);
 
             if buffer.ends_with(&START_WORD) {
                 let err = Err(CommandError::ParameterError(std::io::Error::new(
@@ -195,6 +200,8 @@ impl SifliUart {
                     recv_data.push(byte[0]);
                 }
                 break;
+            } else if buffer.len() == 2  { 
+                buffer.clear();
             }
         }
 
@@ -221,6 +228,7 @@ impl SifliUart {
     }
 
     fn command(&mut self, command: SifliUartCommand) -> Result<SifliUartResponse, CommandError> {
+        tracing::info!("Command: {:?}", command);
         let ret = Self::send(&mut self.writer, &command);
         if let Err(e) = ret {
             tracing::error!("Command send error: {:?}", e);
