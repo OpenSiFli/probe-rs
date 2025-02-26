@@ -1,18 +1,18 @@
 mod arm;
 
+use crate::Error;
 use crate::architecture::arm::communication_interface::{DapProbe, UninitializedArmProbe};
+use crate::probe::blackmagic::BlackMagicProbe;
 use crate::probe::sifliuart::arm::UninitializedSifliUartArmProbe;
 use crate::probe::{
     DebugProbe, DebugProbeError, DebugProbeInfo, DebugProbeSelector, ProbeCreationError,
     ProbeFactory, WireProtocol,
 };
-use crate::Error;
 use probe_rs_target::ScanChainElement;
-use serialport::{available_ports, SerialPort, SerialPortType};
+use serialport::{SerialPort, SerialPortType, available_ports};
 use std::fmt;
 use std::io::{BufReader, BufWriter, Read, Write};
 use std::time::{Duration, Instant};
-use crate::probe::blackmagic::BlackMagicProbe;
 
 const START_WORD: [u8; 2] = [0x7E, 0x79];
 
@@ -157,7 +157,7 @@ impl SifliUart {
         let start_time = Instant::now();
         let mut buffer = vec![];
         let mut recv_data = vec![];
-        
+
         tracing::info!("Start recv");
 
         loop {
@@ -200,7 +200,7 @@ impl SifliUart {
                     recv_data.push(byte[0]);
                 }
                 break;
-            } else if buffer.len() == 2  { 
+            } else if buffer.len() == 2 {
                 buffer.clear();
             }
         }
@@ -363,7 +363,7 @@ impl SifliUartFactory {
             hid_interface,
         })
     }
-    
+
     fn open_port(&self, port_name: &str) -> Result<Box<dyn DebugProbe>, DebugProbeError> {
         let port = serialport::new(port_name, DEFUALT_UART_BAUD)
             .timeout(Duration::from_secs(1))
@@ -404,7 +404,8 @@ impl ProbeFactory for SifliUartFactory {
         }
 
         for port in ports {
-            let Some(_info) = SifliUartFactory::is_sifli_uart(port.port_type, &port.port_name) else {
+            let Some(_info) = SifliUartFactory::is_sifli_uart(port.port_type, &port.port_name)
+            else {
                 continue;
             };
 
@@ -422,7 +423,8 @@ impl ProbeFactory for SifliUartFactory {
             return probes;
         };
         for port in ports {
-            let Some(info) = SifliUartFactory::is_sifli_uart(port.port_type, &port.port_name) else {
+            let Some(info) = SifliUartFactory::is_sifli_uart(port.port_type, &port.port_name)
+            else {
                 continue;
             };
             probes.push(info);

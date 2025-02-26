@@ -1,19 +1,25 @@
-use crate::probe::sifliuart::arm::memory_ap::MemoryAp;
-use crate::architecture::arm::communication_interface::{DapProbe, SwdSequence, UninitializedArmProbe};
-use crate::architecture::arm::dp::{DpAddress, DpRegisterAddress};
-use crate::architecture::arm::memory::{ArmMemoryInterface};
-use crate::architecture::arm::sequences::ArmDebugSequence;
-use crate::architecture::arm::{ap, ArmError, ArmProbeInterface, DapAccess, FullyQualifiedApAddress, SwoAccess, SwoConfig};
-use crate::probe::sifliuart::{SifliUart, SifliUartCommand, SifliUartResponse};
-use crate::probe::{DebugProbeError, Probe};
 use crate::Error as ProbeRsError;
 use crate::MemoryInterface;
+use crate::architecture::arm::ap::{
+    AccessPortType, ApRegister, CFG, CSW, IDR, MemoryApType, memory_ap,
+};
+use crate::architecture::arm::communication_interface::{
+    DapProbe, SwdSequence, UninitializedArmProbe,
+};
+use crate::architecture::arm::dp::{DpAddress, DpRegisterAddress};
+use crate::architecture::arm::memory::ArmMemoryInterface;
+use crate::architecture::arm::sequences::ArmDebugSequence;
+use crate::architecture::arm::{
+    ArmError, ArmProbeInterface, DapAccess, FullyQualifiedApAddress, SwoAccess, SwoConfig, ap,
+};
+use crate::probe::sifliuart::arm::memory_ap::MemoryAp;
+use crate::probe::sifliuart::{SifliUart, SifliUartCommand, SifliUartResponse};
+use crate::probe::{DebugProbeError, Probe};
 use std::cmp::{max, min};
 use std::collections::BTreeSet;
 use std::sync::Arc;
 use std::time::Duration;
 use zerocopy::IntoBytes;
-use crate::architecture::arm::ap::{memory_ap, ApRegister, CSW, IDR, CFG, AccessPortType, MemoryApType};
 
 #[derive(Debug)]
 pub(crate) struct UninitializedSifliUartArmProbe {
@@ -126,10 +132,9 @@ impl DapAccess for SifliUartArmDebug {
             let idr = 0x24770031;
             return Ok(idr);
         } else if addr == CSW::ADDRESS {
-            return Ok(0x23000052)
-        }
-        else if addr == CFG::ADDRESS {
-            return Ok(0x00000000)
+            return Ok(0x23000052);
+        } else if addr == CFG::ADDRESS {
+            return Ok(0x00000000);
         }
         Err(ArmError::NotImplemented("ap register read not implemented"))
     }
