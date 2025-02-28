@@ -1,8 +1,9 @@
+//! SiFli UART Debug Probe, Only support SiFli chip.
+
 mod arm;
 
 use crate::Error;
-use crate::architecture::arm::communication_interface::{DapProbe, UninitializedArmProbe};
-use crate::probe::blackmagic::BlackMagicProbe;
+use crate::architecture::arm::communication_interface::{UninitializedArmProbe};
 use crate::probe::sifliuart::arm::UninitializedSifliUartArmProbe;
 use crate::probe::{
     DebugProbe, DebugProbeError, DebugProbeInfo, DebugProbeSelector, ProbeCreationError,
@@ -58,6 +59,7 @@ impl fmt::Display for CommandError {
     }
 }
 
+/// SiFli UART Debug Probe, Only support SiFli chip.
 pub struct SifliUart {
     reader: BufReader<Box<dyn Read + Send>>,
     writer: BufWriter<Box<dyn Write + Send>>,
@@ -173,7 +175,7 @@ impl SifliUart {
                 continue;
             }
             buffer.push(byte[0]);
-            // tracing::info!("Recv buffer: {:?}", buffer);
+            tracing::info!("Recv buffer: {:?}", buffer);
 
             if buffer.ends_with(&START_WORD) {
                 let err = Err(CommandError::ParameterError(std::io::Error::new(

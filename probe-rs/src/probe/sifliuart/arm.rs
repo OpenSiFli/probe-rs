@@ -1,7 +1,6 @@
-use crate::{CoreStatus, Error as ProbeRsError};
 use crate::MemoryInterface;
 use crate::architecture::arm::ap::{
-    AccessPortType, ApRegister, CFG, CSW, IDR, MemoryApType, memory_ap,
+    AccessPortType, ApRegister, CFG, CSW, IDR, MemoryAp, MemoryApType,
 };
 use crate::architecture::arm::communication_interface::{
     DapProbe, SwdSequence, UninitializedArmProbe,
@@ -10,11 +9,11 @@ use crate::architecture::arm::dp::{DpAddress, DpRegisterAddress};
 use crate::architecture::arm::memory::ArmMemoryInterface;
 use crate::architecture::arm::sequences::ArmDebugSequence;
 use crate::architecture::arm::{
-    ArmError, ArmProbeInterface, DapAccess, FullyQualifiedApAddress, SwoAccess, SwoConfig, ap,
+    ArmError, ArmProbeInterface, DapAccess, FullyQualifiedApAddress, SwoAccess, SwoConfig,
 };
-use crate::probe::sifliuart::arm::memory_ap::MemoryAp;
 use crate::probe::sifliuart::{SifliUart, SifliUartCommand, SifliUartResponse};
 use crate::probe::{DebugProbeError, Probe};
+use crate::{CoreStatus, Error as ProbeRsError};
 use std::cmp::{max, min};
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -51,12 +50,6 @@ impl SifliUartArmDebug {
         };
 
         Ok(interface)
-    }
-}
-
-impl UninitializedSifliUartArmProbe {
-    fn new(probe: Box<SifliUart>) -> Self {
-        Self { probe }
     }
 }
 
@@ -213,7 +206,7 @@ impl ArmMemoryInterface for SifliUartMemoryInterface<'_> {
             interface_name: "ARM",
         }))
     }
-    
+
     fn update_core_status(&mut self, state: CoreStatus) {
         // 当出现Unknow的时候，重新初始化
         if state == CoreStatus::Unknown {

@@ -1,13 +1,10 @@
-use crate::architecture::arm::ArmError;
-use crate::architecture::arm::armv8m;
 use crate::architecture::arm::armv8m::Dhcsr;
 use crate::architecture::arm::memory::ArmMemoryInterface;
 use crate::architecture::arm::sequences::ArmDebugSequence;
-use crate::probe::DebugProbeError;
-use crate::vendor::st::sequences::stm32_armv6::Stm32Armv6Family;
+use crate::architecture::arm::ArmError;
+use crate::MemoryMappedRegister;
 use probe_rs_target::CoreType;
 use std::sync::Arc;
-use crate::MemoryMappedRegister;
 
 #[derive(Debug)]
 pub struct Sf32lb52 {}
@@ -19,7 +16,7 @@ impl Sf32lb52 {
 }
 
 mod pmuc {
-    use crate::architecture::arm::{ArmError, memory::ArmMemoryInterface};
+    use crate::architecture::arm::{memory::ArmMemoryInterface, ArmError};
     use bitfield::bitfield;
 
     /// The base address of the PMUC component
@@ -29,29 +26,14 @@ mod pmuc {
         /// The control register (CR) of the PMUC.
         pub struct Control(u32);
         impl Debug;
-
-        // [19:15] PIN1_SEL 占 5 位，默认值应设置为 1
+        
         pub u8, pin1_sel, set_pin1_sel: 19, 15;
-
-        // [14:10] PIN0_SEL 占 5 位，默认值为 0
         pub u8, pin0_sel, set_pin0_sel: 14, 10;
-
-        // [9:7] PIN1_MODE 占 3 位，默认值为 0
         pub u8, pin1_mode, set_pin1_mode: 9, 7;
-
-        // [6:4] PIN0_MODE 占 3 位，默认值为 0
         pub u8, pin0_mode, set_pin0_mode: 6, 4;
-
-        // [3] PIN_RET 占 1 位，默认值为 0
         pub bool, pin_ret, set_pin_ret: 3;
-
-        // [2] REBOOT 占 1 位，默认值为 0
         pub bool, reboot, set_reboot: 2;
-
-        // [1] HIBER_EN 占 1 位，默认值为 0
         pub bool, hiber_en, set_hiber_en: 1;
-
-        // [0] SEL_LPCLK 占 1 位，默认值为 0
         pub bool, sel_lpclk, set_sel_lpclk: 0;
     }
 
@@ -86,8 +68,8 @@ impl ArmDebugSequence for Sf32lb52 {
     fn reset_system(
         &self,
         interface: &mut dyn ArmMemoryInterface,
-        core_type: CoreType,
-        debug_base: Option<u64>,
+        _core_type: CoreType,
+        _debug_base: Option<u64>,
     ) -> Result<(), ArmError> {
         let mut pmuc = pmuc::Control::read(interface)?;
         pmuc.set_reboot(true);
@@ -95,7 +77,7 @@ impl ArmDebugSequence for Sf32lb52 {
         // 等待500ms重新启动
         std::thread::sleep(std::time::Duration::from_millis(500));
         interface.update_core_status(crate::CoreStatus::Unknown);
-
+        
         // Halt 住CPU
         halt_core(interface)?;
         Ok(())
