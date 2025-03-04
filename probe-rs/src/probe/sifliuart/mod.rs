@@ -3,7 +3,7 @@
 mod arm;
 
 use crate::Error;
-use crate::architecture::arm::communication_interface::{UninitializedArmProbe};
+use crate::architecture::arm::communication_interface::UninitializedArmProbe;
 use crate::probe::sifliuart::arm::UninitializedSifliUartArmProbe;
 use crate::probe::{
     DebugProbe, DebugProbeError, DebugProbeInfo, DebugProbeSelector, ProbeCreationError,
@@ -17,7 +17,7 @@ use std::time::{Duration, Instant};
 
 const START_WORD: [u8; 2] = [0x7E, 0x79];
 
-const DEFUALT_RECV_TIMEOUT: Duration = Duration::from_secs(2);
+const DEFUALT_RECV_TIMEOUT: Duration = Duration::from_secs(3);
 
 const DEFUALT_UART_BAUD: u32 = 1000000;
 
@@ -174,7 +174,12 @@ impl SifliUart {
             if reader.read_exact(&mut byte).is_err() {
                 continue;
             }
-            buffer.push(byte[0]);
+
+            if (byte[0] == START_WORD[0]) || (buffer.len() == 1 && byte[0] == START_WORD[1]) {
+                buffer.push(byte[0]);
+            } else {
+                buffer.clear();
+            }
             tracing::info!("Recv buffer: {:?}", buffer);
 
             if buffer.ends_with(&START_WORD) {
@@ -368,7 +373,7 @@ impl SifliUartFactory {
 
     fn open_port(&self, port_name: &str) -> Result<Box<dyn DebugProbe>, DebugProbeError> {
         let port = serialport::new(port_name, DEFUALT_UART_BAUD)
-            .timeout(Duration::from_secs(1))
+            .timeout(Duration::from_secs(3))
             .open()
             .map_err(|_| {
                 DebugProbeError::ProbeCouldNotBeCreated(ProbeCreationError::CouldNotOpen)
