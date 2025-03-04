@@ -1,8 +1,8 @@
+use crate::MemoryMappedRegister;
+use crate::architecture::arm::ArmError;
 use crate::architecture::arm::armv8m::Dhcsr;
 use crate::architecture::arm::memory::ArmMemoryInterface;
 use crate::architecture::arm::sequences::ArmDebugSequence;
-use crate::architecture::arm::ArmError;
-use crate::MemoryMappedRegister;
 use probe_rs_target::CoreType;
 use std::sync::Arc;
 
@@ -16,7 +16,7 @@ impl Sf32lb52 {
 }
 
 mod pmuc {
-    use crate::architecture::arm::{memory::ArmMemoryInterface, ArmError};
+    use crate::architecture::arm::{ArmError, memory::ArmMemoryInterface};
     use bitfield::bitfield;
 
     /// The base address of the PMUC component
@@ -26,7 +26,7 @@ mod pmuc {
         /// The control register (CR) of the PMUC.
         pub struct Control(u32);
         impl Debug;
-        
+
         pub u8, pin1_sel, set_pin1_sel: 19, 15;
         pub u8, pin0_sel, set_pin0_sel: 14, 10;
         pub u8, pin1_mode, set_pin1_mode: 9, 7;
@@ -71,15 +71,19 @@ impl ArmDebugSequence for Sf32lb52 {
         _core_type: CoreType,
         _debug_base: Option<u64>,
     ) -> Result<(), ArmError> {
-        let mut pmuc = pmuc::Control::read(interface)?;
-        pmuc.set_reboot(true);
-        let _ = pmuc.write(interface); // 我们不在意这个错误
+        use crate::architecture::arm::core::armv7m::Aircr;
+
+        let mut aircr = Aircr(0);
+        aircr.vectkey();
+        aircr.set_sysresetreq(true);
+
+        let _ = interface.write_word_32(Aircr::get_mmio_address(), aircr.into());
         // 等待500ms重新启动
         std::thread::sleep(std::time::Duration::from_millis(500));
         interface.update_core_status(crate::CoreStatus::Unknown);
-        
+
         // Halt 住CPU
-        halt_core(interface)?;
+        // halt_core(interface)?;
         Ok(())
     }
 }
