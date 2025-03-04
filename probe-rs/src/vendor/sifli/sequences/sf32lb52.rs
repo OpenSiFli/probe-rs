@@ -71,19 +71,17 @@ impl ArmDebugSequence for Sf32lb52 {
         _core_type: CoreType,
         _debug_base: Option<u64>,
     ) -> Result<(), ArmError> {
-        use crate::architecture::arm::core::armv7m::Aircr;
+        use crate::architecture::arm::core::armv8m::Aircr;
 
         let mut aircr = Aircr(0);
         aircr.vectkey();
         aircr.set_sysresetreq(true);
 
         let _ = interface.write_word_32(Aircr::get_mmio_address(), aircr.into());
-        // 等待500ms重新启动
+
         std::thread::sleep(std::time::Duration::from_millis(500));
         interface.update_core_status(crate::CoreStatus::Unknown);
-
-        // Halt 住CPU
-        // halt_core(interface)?;
+        
         Ok(())
     }
 }
