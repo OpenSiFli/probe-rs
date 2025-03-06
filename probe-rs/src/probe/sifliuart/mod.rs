@@ -160,8 +160,6 @@ impl SifliUart {
         let mut buffer = vec![];
         let mut recv_data = vec![];
 
-        // tracing::info!("Start recv");
-
         loop {
             if start_time.elapsed() >= DEFUALT_RECV_TIMEOUT {
                 return Err(CommandError::ParameterError(std::io::Error::new(
@@ -241,8 +239,15 @@ impl SifliUart {
             tracing::error!("Command send error: {:?}", e);
             return Err(e);
         }
-
-        Self::recv(&mut self.reader)
+        
+        match command { 
+            SifliUartCommand::Exit => {
+                Ok(SifliUartResponse::Exit)
+            }
+            _ => {
+                Self::recv(&mut self.reader)
+            }
+        }
     }
 }
 
