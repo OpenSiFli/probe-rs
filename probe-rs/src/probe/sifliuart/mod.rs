@@ -82,7 +82,8 @@ impl fmt::Display for SifliUart {
 }
 
 impl SifliUart {
-    fn new(
+    /// Create a new SiFli UART Debug Probe.
+    pub fn new(
         reader: Box<dyn Read + Send>,
         writer: Box<dyn Write + Send>,
         port: Box<dyn SerialPort>,
