@@ -37,6 +37,48 @@ enum SifliUartResponse {
     MEMWrite,
 }
 
+impl<'a> fmt::Display for SifliUartCommand<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SifliUartCommand::Enter => write!(f, "Enter"),
+            SifliUartCommand::Exit => write!(f, "Exit"),
+            SifliUartCommand::MEMRead { addr, len } => {
+                write!(f, "MEMRead {{ addr: {:#X}, len: {:#X} }}", addr, len)
+            },
+            SifliUartCommand::MEMWrite { addr, data } => {
+                write!(f, "MEMWrite {{ addr: {:#X}, data: [", addr)?;
+                for (i, d) in data.iter().enumerate() {
+                    if i > 0 {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "{:#X}", d)?;
+                }
+                write!(f, "] }}")
+            },
+        }
+    }
+}
+
+impl fmt::Display for SifliUartResponse {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SifliUartResponse::Enter => write!(f, "Enter"),
+            SifliUartResponse::Exit => write!(f, "Exit"),
+            SifliUartResponse::MEMRead { data } => {
+                write!(f, "MEMRead {{ data: [")?;
+                for (i, byte) in data.iter().enumerate() {
+                    if i > 0 {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "{:#04X}", byte)?; // 以带 0x 前缀形式输出, 格式如 0x01
+                }
+                write!(f, "] }}")
+            },
+            SifliUartResponse::MEMWrite => write!(f, "MEMWrite"),
+        }
+    }
+}
+
 #[allow(dead_code)]
 #[derive(Debug, thiserror::Error)]
 enum CommandError {
@@ -141,7 +183,6 @@ impl SifliUart {
         }
 
         let header = Self::create_header(send_data.len() as u16);
-        // tracing::info!("Send header: {:?}", header);
         writer
             .write_all(&header)
             .map_err(CommandError::ProbeError)?;
@@ -193,6 +234,7 @@ impl SifliUart {
                     return err;
                 }
                 let size = u16::from_le_bytes(temp);
+                tracing::info!("Recv size: {}", size);
 
                 // 还有1个byte的校验位和1个byte的通道
                 if reader.read_exact(&mut temp).is_err() {
@@ -204,6 +246,7 @@ impl SifliUart {
                         return err;
                     }
                     recv_data.push(byte[0]);
+                    tracing::info!("Recv data: {:?}", recv_data);
                 }
                 break;
             } else if buffer.len() == 2 {
@@ -234,7 +277,7 @@ impl SifliUart {
     }
 
     fn command(&mut self, command: SifliUartCommand) -> Result<SifliUartResponse, CommandError> {
-        tracing::info!("Command: {:?}", command);
+        tracing::info!("Command: {}", command);
         let ret = Self::send(&mut self.writer, &command);
         if let Err(e) = ret {
             tracing::error!("Command send error: {:?}", e);

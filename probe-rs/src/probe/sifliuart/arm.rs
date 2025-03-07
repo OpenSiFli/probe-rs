@@ -264,6 +264,12 @@ impl SifliUartMemoryInterface<'_> {
             return Ok(());
         }
 
+        let address = if (address & 0xff000000) == 0x12000000 {
+            (address & 0x00ffffff) | 0x62000000
+        } else {
+            address
+        };
+
         let addr_usize = address as usize;
         // 计算对齐后的起始地址和结束地址
         let start_aligned = addr_usize - (addr_usize % 4);
@@ -332,11 +338,17 @@ impl SifliUartMemoryInterface<'_> {
 
     fn read(&mut self, address: u64, data: &mut [u8]) -> Result<(), ArmError> {
         let sifli_uart = &mut self.probe.probe;
-
+        
         // 若数据长度为0，直接返回
         if data.is_empty() {
             return Ok(());
         }
+
+        let address = if (address & 0xff000000) == 0x12000000 {
+            (address & 0x00ffffff) | 0x62000000
+        } else {
+            address
+        };
 
         let addr = address as usize;
         let end_addr = addr + data.len();
