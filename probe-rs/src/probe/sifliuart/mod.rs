@@ -12,9 +12,10 @@ use crate::probe::{
 };
 use probe_rs_target::ScanChainElement;
 use serialport::{SerialPort, SerialPortType, available_ports};
-use std::fmt;
+use std::{env, fmt};
 use std::io::{BufReader, BufWriter, Read, Write};
 use std::time::{Duration, Instant};
+use itertools::Itertools;
 
 const START_WORD: [u8; 2] = [0x7E, 0x79];
 
@@ -45,7 +46,7 @@ impl<'a> fmt::Display for SifliUartCommand<'a> {
             SifliUartCommand::Exit => write!(f, "Exit"),
             SifliUartCommand::MEMRead { addr, len } => {
                 write!(f, "MEMRead {{ addr: {:#X}, len: {:#X} }}", addr, len)
-            },
+            }
             SifliUartCommand::MEMWrite { addr, data } => {
                 write!(f, "MEMWrite {{ addr: {:#X}, data: [", addr)?;
                 for (i, d) in data.iter().enumerate() {
@@ -55,7 +56,7 @@ impl<'a> fmt::Display for SifliUartCommand<'a> {
                     write!(f, "{:#X}", d)?;
                 }
                 write!(f, "] }}")
-            },
+            }
         }
     }
 }
@@ -74,7 +75,7 @@ impl fmt::Display for SifliUartResponse {
                     write!(f, "{:#04X}", byte)?;
                 }
                 write!(f, "] }}")
-            },
+            }
             SifliUartResponse::MEMWrite => write!(f, "MEMWrite"),
         }
     }
@@ -284,8 +285,8 @@ impl SifliUart {
             tracing::error!("Command send error: {:?}", e);
             return Err(e);
         }
-        
-        match command { 
+
+        match command {
             SifliUartCommand::Exit => {
                 Ok(SifliUartResponse::Exit)
             }
@@ -399,16 +400,21 @@ impl SifliUartFactory {
             return None;
         }
 
-        let (vendor_id, product_id, serial_number, hid_interface, identifier) = match port_type {
-            SerialPortType::UsbPort(info) => (
-                info.vid,
-                info.pid,
-                Some(port_name.to_string()),
-                info.interface,
-                "Sifli uart debug probe".to_string(),
-            ),
+        let usb_info = match port_type {
+            SerialPortType::UsbPort(info) => info,
             _ => return None,
         };
+        
+        
+        if env::var("SIFLI_UART_DEBUG").is_err() && (usb_info.product.is_none() || !usb_info.product.as_ref().unwrap().to_lowercase().contains("Sifli")) {
+            return None;
+        }
+
+        let vendor_id = usb_info.vid;
+        let product_id = usb_info.pid;
+        let serial_number = Some(port_name.to_string()); //We set serial_number to the serial device number to make it easier to specify the
+        let hid_interface = usb_info.interface;
+        let identifier = "Sifli uart debug probe".to_string();
 
         Some(DebugProbeInfo {
             identifier,
