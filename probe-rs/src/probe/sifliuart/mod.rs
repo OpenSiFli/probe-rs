@@ -10,12 +10,12 @@ use crate::probe::{
     DebugProbe, DebugProbeError, DebugProbeInfo, DebugProbeSelector, ProbeCreationError,
     ProbeFactory, WireProtocol,
 };
+use itertools::Itertools;
 use probe_rs_target::ScanChainElement;
 use serialport::{SerialPort, SerialPortType, available_ports};
-use std::{env, fmt};
 use std::io::{BufReader, BufWriter, Read, Write};
 use std::time::{Duration, Instant};
-use itertools::Itertools;
+use std::{env, fmt};
 
 const START_WORD: [u8; 2] = [0x7E, 0x79];
 
@@ -287,12 +287,8 @@ impl SifliUart {
         }
 
         match command {
-            SifliUartCommand::Exit => {
-                Ok(SifliUartResponse::Exit)
-            }
-            _ => {
-                Self::recv(&mut self.reader)
-            }
+            SifliUartCommand::Exit => Ok(SifliUartResponse::Exit),
+            _ => Self::recv(&mut self.reader),
         }
     }
 }
@@ -404,9 +400,16 @@ impl SifliUartFactory {
             SerialPortType::UsbPort(info) => info,
             _ => return None,
         };
-        
-        
-        if env::var("SIFLI_UART_DEBUG").is_err() && (usb_info.product.is_none() || !usb_info.product.as_ref().unwrap().to_lowercase().contains("Sifli")) {
+
+        if env::var("SIFLI_UART_DEBUG").is_err()
+            && (usb_info.product.is_none()
+                || !usb_info
+                    .product
+                    .as_ref()
+                    .unwrap()
+                    .to_lowercase()
+                    .contains("Sifli"))
+        {
             return None;
         }
 

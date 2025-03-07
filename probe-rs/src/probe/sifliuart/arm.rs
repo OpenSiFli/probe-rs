@@ -276,9 +276,9 @@ impl SifliUartMemoryInterface<'_> {
         let end_aligned = ((addr_usize + data.len() + 3) / 4) * 4;
         let total_bytes = end_aligned - start_aligned;
         let total_words = total_bytes / 4;
-        
+
         let mut buffer = vec![0u8; total_bytes];
-        
+
         for i in 0..total_words {
             let block_addr = start_aligned + i * 4;
             let block_end = block_addr + 4;
@@ -335,7 +335,7 @@ impl SifliUartMemoryInterface<'_> {
 
     fn read(&mut self, address: u64, data: &mut [u8]) -> Result<(), ArmError> {
         let sifli_uart = &mut self.probe.probe;
-        
+
         if data.is_empty() {
             return Ok(());
         }
@@ -348,12 +348,12 @@ impl SifliUartMemoryInterface<'_> {
 
         let addr = address as usize;
         let end_addr = addr + data.len();
-        
+
         let start_aligned = addr - (addr % 4);
         let end_aligned = ((end_addr + 3) / 4) * 4;
         let total_bytes = end_aligned - start_aligned;
         let total_words = total_bytes / 4;
-        
+
         let resp = sifli_uart
             .command(SifliUartCommand::MEMRead {
                 addr: start_aligned as u32,

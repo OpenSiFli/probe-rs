@@ -4,7 +4,7 @@ use crate::probe::{
     DebugProbeError, DebugProbeInfo, DebugProbeSelector, Probe, ProbeCreationError, ProbeFactory,
 };
 
-use super::{blackmagic, cmsisdap, espusbjtag, ftdi, jlink, stlink, wlink, sifliuart};
+use super::{blackmagic, cmsisdap, espusbjtag, ftdi, jlink, sifliuart, stlink, wlink};
 
 /// Struct to list all attached debug probes
 #[derive(Debug)]

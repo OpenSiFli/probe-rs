@@ -26,11 +26,11 @@ pub mod infineon;
 pub mod microchip;
 pub mod nordicsemi;
 pub mod nxp;
+pub mod sifli;
 pub mod silabs;
 pub mod st;
 pub mod ti;
 pub mod vorago;
-pub mod sifli;
 
 /// Vendor support trait.
 pub trait Vendor: Send + Sync + std::fmt::Display {

@@ -10,9 +10,9 @@ pub mod fake_probe;
 pub mod ftdi;
 pub mod jlink;
 pub mod list;
+pub mod sifliuart;
 pub mod stlink;
 pub mod wlink;
-pub mod sifliuart;
 
 use crate::architecture::arm::ArmError;
 use crate::architecture::arm::sequences::{ArmDebugSequence, DefaultArmSequence};

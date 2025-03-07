@@ -81,7 +81,7 @@ impl ArmDebugSequence for Sf32lb52 {
 
         std::thread::sleep(std::time::Duration::from_millis(500));
         interface.update_core_status(crate::CoreStatus::Unknown);
-        
+
         Ok(())
     }
 }
