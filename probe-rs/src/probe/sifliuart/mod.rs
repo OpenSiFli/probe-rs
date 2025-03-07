@@ -1,4 +1,5 @@
 //! SiFli UART Debug Probe, Only support SiFli chip.
+//! Refer to https://webfile.lovemcu.cn/file/user%20manual/UM5201-SF32LB52x-%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8C%20V0p81.pdf#153 for specific communication formats
 
 mod arm;
 
@@ -70,7 +71,7 @@ impl fmt::Display for SifliUartResponse {
                     if i > 0 {
                         write!(f, ", ")?;
                     }
-                    write!(f, "{:#04X}", byte)?; // 以带 0x 前缀形式输出, 格式如 0x01
+                    write!(f, "{:#04X}", byte)?;
                 }
                 write!(f, "] }}")
             },
@@ -228,7 +229,7 @@ impl SifliUart {
                     "Invalid frame size",
                 )));
                 recv_data.clear();
-                // 读取长度，2个byte
+                // Header Length
                 let mut temp = [0; 2];
                 if reader.read_exact(&mut temp).is_err() {
                     return err;
@@ -236,7 +237,7 @@ impl SifliUart {
                 let size = u16::from_le_bytes(temp);
                 tracing::info!("Recv size: {}", size);
 
-                // 还有1个byte的校验位和1个byte的通道
+                // Header channel and crc
                 if reader.read_exact(&mut temp).is_err() {
                     return err;
                 }
@@ -371,7 +372,6 @@ impl DebugProbe for SifliUart {
     ) -> Result<Box<dyn UninitializedArmProbe + 'probe>, (Box<dyn DebugProbe>, DebugProbeError)>
     {
         Ok(Box::new(UninitializedSifliUartArmProbe { probe: self }))
-        // Ok(Box::new(ArmCommunicationInterface::new(self, false)))
     }
 
     fn has_riscv_interface(&self) -> bool {
@@ -448,7 +448,6 @@ impl std::fmt::Display for SifliUartFactory {
 
 impl ProbeFactory for SifliUartFactory {
     fn open(&self, selector: &DebugProbeSelector) -> Result<Box<dyn DebugProbe>, DebugProbeError> {
-        // 查看是否有可用的串口
         let Ok(ports) = available_ports() else {
             return Err(DebugProbeError::ProbeCouldNotBeCreated(
                 ProbeCreationError::CouldNotOpen,

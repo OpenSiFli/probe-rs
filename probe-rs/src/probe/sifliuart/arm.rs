@@ -208,7 +208,7 @@ impl ArmMemoryInterface for SifliUartMemoryInterface<'_> {
     }
 
     fn update_core_status(&mut self, state: CoreStatus) {
-        // 当出现Unknow的时候，重新初始化
+        // If the core status is unknown, we will enter debug mode.
         if state == CoreStatus::Unknown {
             self.probe.probe.command(SifliUartCommand::Enter).unwrap();
         }
@@ -271,29 +271,26 @@ impl SifliUartMemoryInterface<'_> {
         };
 
         let addr_usize = address as usize;
-        // 计算对齐后的起始地址和结束地址
+        // Calculate the start address and end address after alignment
         let start_aligned = addr_usize - (addr_usize % 4);
         let end_aligned = ((addr_usize + data.len() + 3) / 4) * 4;
         let total_bytes = end_aligned - start_aligned;
         let total_words = total_bytes / 4;
-
-        // 分配缓冲区，保存整个对齐区域的数据
+        
         let mut buffer = vec![0u8; total_bytes];
-
-        // 新数据写入的区域为 [addr_usize, addr_usize + data.len())
-        // 遍历整个对齐区域的每个4字节块
+        
         for i in 0..total_words {
             let block_addr = start_aligned + i * 4;
             let block_end = block_addr + 4;
 
-            // 判断当前 4 字节块是否被写入的新数据“完全覆盖”
-            // 如果 block 完全落入新数据区域，则直接拷贝新数据
+            // Determine if the current 4-byte block is ‘completely overwritten’ by the new data written to it
+            // If the block is completely in the new data area, then copy the new data directly
             if block_addr >= addr_usize && block_end <= addr_usize + data.len() {
                 let offset_in_data = block_addr - addr_usize;
                 buffer[i * 4..i * 4 + 4].copy_from_slice(&data[offset_in_data..offset_in_data + 4]);
             } else {
-                // 其余情况（头部或尾部不完全覆盖）：
-                // 先调用 MEMRead 读出原有的 4 字节数据块
+                // For the rest of the cases (header or tail incomplete overwrite):
+                // Call MEMRead first to read out the original 4-byte block.
                 let resp = sifli_uart
                     .command(SifliUartCommand::MEMRead {
                         addr: block_addr as u32,
@@ -306,7 +303,7 @@ impl SifliUartMemoryInterface<'_> {
                     }
                     _ => return Err(ArmError::Other("MEMRead Error".to_string())),
                 };
-                // 计算该块与新数据区域的重叠部分
+                // Calculate the overlap of the block with the new data area
                 let overlap_start = max(block_addr, addr_usize);
                 let overlap_end = min(block_end, addr_usize + data.len());
                 if overlap_start < overlap_end {
@@ -325,7 +322,7 @@ impl SifliUartMemoryInterface<'_> {
             .map(|chunk| u32::from_le_bytes(chunk.try_into().expect("chunk length is 4")))
             .collect();
 
-        // 一次性写入整个对齐区域
+        // Write the entire alignment area at once
         sifli_uart
             .command(SifliUartCommand::MEMWrite {
                 addr: start_aligned as u32,
@@ -339,7 +336,6 @@ impl SifliUartMemoryInterface<'_> {
     fn read(&mut self, address: u64, data: &mut [u8]) -> Result<(), ArmError> {
         let sifli_uart = &mut self.probe.probe;
         
-        // 若数据长度为0，直接返回
         if data.is_empty() {
             return Ok(());
         }
@@ -352,14 +348,12 @@ impl SifliUartMemoryInterface<'_> {
 
         let addr = address as usize;
         let end_addr = addr + data.len();
-
-        // 计算对齐区域：[start_aligned, end_aligned)
+        
         let start_aligned = addr - (addr % 4);
         let end_aligned = ((end_addr + 3) / 4) * 4;
         let total_bytes = end_aligned - start_aligned;
         let total_words = total_bytes / 4;
-
-        // 一次性读取对齐区域内所有数据
+        
         let resp = sifli_uart
             .command(SifliUartCommand::MEMRead {
                 addr: start_aligned as u32,
@@ -372,7 +366,7 @@ impl SifliUartMemoryInterface<'_> {
             _ => return Err(ArmError::Other("MEMRead Error".to_string())),
         };
 
-        // 将关心的区域数据拷贝至 data
+        // Copy the area of interest data to data
         let offset = addr - start_aligned;
         data.copy_from_slice(&buf[offset..offset + data.len()]);
 
