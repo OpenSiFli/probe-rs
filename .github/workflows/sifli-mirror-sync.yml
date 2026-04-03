@@ -91,6 +91,7 @@ jobs:
           region: ${{ env.COS_DOWNLOAD_REGION }}
           bucket: ${{ env.COS_DOWNLOAD_BUCKET }}
           prefix: github_assets/OpenSiFli/probe-rs/releases/download/${{ env.TAG_NAME }}/
-          artifacts: artifacts/
+          artifacts: .
           delete_remote: true
           flush_url: ${{ env.COS_DOWNLOAD_FLUSH_URL }}
+          working_directory: artifacts
