@@ -98,8 +98,8 @@ search = "## \\[Unreleased\\]"
 replace = "## [{{version}}]\n\nReleased {{date}}"
 [[package.metadata.release.pre-release-replacements]]
 file = "../CHANGELOG.md"
-search = "\\[unreleased\\]: https://github.com/probe-rs/probe-rs/compare/v([a-z0-9.-]+)\\.\\.\\.master"
-replace = "[unreleased]: https://github.com/probe-rs/probe-rs/compare/v{{version}}...master\n[{{version}}]: https://github.com/probe-rs/probe-rs/compare/v$1...v{{version}}"
+search = "\\[unreleased\\]: https://github.com/OpenSiFli/probe-rs/compare/v([a-z0-9.-]+)\\.\\.\\.master"
+replace = "[unreleased]: https://github.com/OpenSiFli/probe-rs/compare/v{{version}}...master\n[{{version}}]: https://github.com/OpenSiFli/probe-rs/compare/v$1...v{{version}}"
 
 [package.metadata.docs.rs]
 features = ["builtin-targets"]

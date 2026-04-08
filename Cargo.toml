@@ -3,8 +3,8 @@ version = "0.31.1-sifli"
 edition = "2024"
 
 documentation = "https://docs.rs/probe-rs/"
-homepage = "https://github.com/probe-rs/probe-rs"
-repository = "https://github.com/probe-rs/probe-rs"
+homepage = "https://github.com/OpenSiFli/probe-rs"
+repository = "https://github.com/OpenSiFli/probe-rs"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 

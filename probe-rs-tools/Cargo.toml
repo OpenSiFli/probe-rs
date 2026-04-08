@@ -3,9 +3,9 @@ name = "probe-rs-tools"
 version.workspace = true
 edition.workspace = true
 documentation.workspace = true
-# This is used by cargo-dist when creating the homebrew package.
+# This is used by cargo-dist when generating release notes and installers.
 # Using homepage.workspace seems to fail when cargo-dist is used.
-homepage = "https://probe.rs"
+homepage = "https://github.com/OpenSiFli/probe-rs"
 repository.workspace = true
 readme.workspace = true
 license.workspace = true
