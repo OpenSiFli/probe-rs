@@ -152,13 +152,13 @@ impl ArmMemoryInterface for SifliUartMemoryInterface<'_> {
 
     fn update_core_status(&mut self, state: CoreStatus) {
         // If the core status is unknown, we will enter debug mode.
-        if state == CoreStatus::Unknown {
-            if let Err(error) = self.probe.probe.command(SifliUartCommand::Enter) {
-                tracing::debug!(
-                    "Failed to re-enter SiFli UART debug mode after status reset: {}",
-                    error
-                );
-            }
+        if state == CoreStatus::Unknown
+            && let Err(error) = self.probe.probe.command(SifliUartCommand::Enter)
+        {
+            tracing::debug!(
+                "Failed to re-enter SiFli UART debug mode after status reset: {}",
+                error
+            );
         }
     }
 }

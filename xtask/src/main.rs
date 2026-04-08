@@ -746,41 +746,6 @@ fn assemble_changelog(
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::{default_sync_branch_name, sanitize_branch_component};
-
-    #[test]
-    fn derives_sync_branch_from_tag() {
-        assert_eq!(default_sync_branch_name("v0.30.0"), "sync/v0.30.0");
-        assert_eq!(
-            default_sync_branch_name("refs/tags/v0.30.0"),
-            "sync/v0.30.0"
-        );
-    }
-
-    #[test]
-    fn derives_sync_branch_from_branch_ref() {
-        assert_eq!(
-            default_sync_branch_name("probe-rs/master"),
-            "sync/probe-rs-master"
-        );
-        assert_eq!(
-            default_sync_branch_name("refs/heads/release/0.30"),
-            "sync/release-0.30"
-        );
-    }
-
-    #[test]
-    fn sanitizes_invalid_branch_characters() {
-        assert_eq!(
-            sanitize_branch_component(" release candidate:v0.30.0 "),
-            "release-candidate-v0.30.0"
-        );
-        assert_eq!(sanitize_branch_component("///"), "");
-    }
-}
-
 fn write_changelog_section(
     mut writer: impl std::io::Write,
     heading: &str,
@@ -828,4 +793,39 @@ fn write_changelog_section(
     writeln!(writer)?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{default_sync_branch_name, sanitize_branch_component};
+
+    #[test]
+    fn derives_sync_branch_from_tag() {
+        assert_eq!(default_sync_branch_name("v0.30.0"), "sync/v0.30.0");
+        assert_eq!(
+            default_sync_branch_name("refs/tags/v0.30.0"),
+            "sync/v0.30.0"
+        );
+    }
+
+    #[test]
+    fn derives_sync_branch_from_branch_ref() {
+        assert_eq!(
+            default_sync_branch_name("probe-rs/master"),
+            "sync/probe-rs-master"
+        );
+        assert_eq!(
+            default_sync_branch_name("refs/heads/release/0.30"),
+            "sync/release-0.30"
+        );
+    }
+
+    #[test]
+    fn sanitizes_invalid_branch_characters() {
+        assert_eq!(
+            sanitize_branch_component(" release candidate:v0.30.0 "),
+            "release-candidate-v0.30.0"
+        );
+        assert_eq!(sanitize_branch_component("///"), "");
+    }
 }

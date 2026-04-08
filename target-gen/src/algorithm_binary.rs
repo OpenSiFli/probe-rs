@@ -270,7 +270,7 @@ fn relocation_offset(runtime_start: u32, runtime_end: u32, offset: u32) -> Resul
     }
 
     anyhow::ensure!(
-        (offset % 4) == 0,
+        offset.is_multiple_of(4),
         "Flash algorithm relocation slot {offset:#010x} is not 4-byte aligned."
     );
 
