@@ -212,33 +212,6 @@ jobs:
           echo "EOF" >> "$GITHUB_OUTPUT"
 
           cp dist-manifest.json "$BUILD_MANIFEST_NAME"
-      - name: Rewrite installer download URLs to SiFli CDN
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const manifest = JSON.parse(fs.readFileSync('dist-manifest.json', 'utf8'));
-            const files = (manifest.upload_files || []).filter((f) => /installer\.(sh|ps1)$/.test(f));
-            if (!files.length) {
-              core.info('No installer scripts found to rewrite.');
-              return;
-            }
-            const base = 'https://downloads.sifli.com/github_assets/OpenSiFli/probe-rs/releases/download/';
-            const re = /https:\/\/github\.com\/.+?\/releases\/download\//g;
-            for (const file of files) {
-              if (!fs.existsSync(file)) {
-                core.warning(`Installer not found: ${file}`);
-                continue;
-              }
-              const text = fs.readFileSync(file, 'utf8');
-              const replaced = text.replace(re, base);
-              if (replaced !== text) {
-                fs.writeFileSync(file, replaced, 'utf8');
-                core.info(`Rewrote download base in ${file}`);
-              } else {
-                core.info(`No GitHub release download URLs found in ${file}`);
-              }
-            }
       - name: "Upload artifacts"
         uses: actions/upload-artifact@v6
         with:
@@ -303,34 +276,15 @@ jobs:
           rm -f artifacts/*-dist-manifest.json
       - name: Create GitHub Release
         env:
+          PRERELEASE_FLAG: "${{ fromJson(steps.host.outputs.manifest).announcement_is_prerelease && '--prerelease' || '' }}"
           ANNOUNCEMENT_TITLE: "${{ fromJson(steps.host.outputs.manifest).announcement_title }}"
           ANNOUNCEMENT_BODY: "${{ fromJson(steps.host.outputs.manifest).announcement_github_body }}"
           RELEASE_COMMIT: "${{ github.sha }}"
         run: |
-          export RUNNER_TEMP
-          python3 <<'PY'
-          import os
-          import pathlib
-          import re
+          # Write and read notes from a file to avoid quoting breaking things
+          echo "$ANNOUNCEMENT_BODY" > $RUNNER_TEMP/notes.txt
 
-          body = os.environ["ANNOUNCEMENT_BODY"]
-          body = re.sub(
-              r"https://github\.com/.+?/releases/download/",
-              "https://downloads.sifli.com/github_assets/OpenSiFli/probe-rs/releases/download/",
-              body,
-          )
-          body = body.replace(
-              "--repo probe-rs/probe-rs",
-              "--repo OpenSiFli/probe-rs",
-          )
-          body = body.replace(
-              "https://github.com/probe-rs/probe-rs/attestations",
-              "https://github.com/OpenSiFli/probe-rs/attestations",
-          )
-          pathlib.Path(os.environ["RUNNER_TEMP"], "notes.txt").write_text(body, encoding="utf-8")
-          PY
-
-          gh release create "${{ needs.plan.outputs.tag }}" --target "$RELEASE_COMMIT" --title "$ANNOUNCEMENT_TITLE" --notes-file "$RUNNER_TEMP/notes.txt" artifacts/*
+          gh release create "${{ needs.plan.outputs.tag }}" --target "$RELEASE_COMMIT" $PRERELEASE_FLAG --title "$ANNOUNCEMENT_TITLE" --notes-file "$RUNNER_TEMP/notes.txt" artifacts/*
 
   announce:
     needs:

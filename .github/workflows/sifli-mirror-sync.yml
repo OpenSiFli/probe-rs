@@ -23,7 +23,7 @@ on:
 
 permissions:
   actions: read
-  contents: read
+  contents: write
 
 jobs:
   sync-release-assets:
@@ -37,7 +37,17 @@ jobs:
       COS_DOWNLOAD_REGION: ${{ secrets.COS_DOWNLOAD_REGION }}
       COS_DOWNLOAD_BUCKET: ${{ secrets.COS_DOWNLOAD_BUCKET }}
       COS_DOWNLOAD_FLUSH_URL: ${{ secrets.COS_DOWNLOAD_FLUSH_URL }}
+      CDN_BASE: https://downloads.sifli.com/github_assets/${{ github.repository }}/releases/download/
     steps:
+      - name: Resolve release tag
+        run: |
+          tag_name="${{ github.event.workflow_run.head_branch }}"
+          if [[ -z "${tag_name}" ]]; then
+            echo "Unable to determine tag name from workflow_run payload."
+            exit 1
+          fi
+          echo "TAG_NAME=${tag_name}" >> "$GITHUB_ENV"
+
       - name: Check mirror sync configuration
         id: config
         run: |
@@ -67,12 +77,15 @@ jobs:
             exit 1
           fi
 
-          tag_name="$(jq -r '.announcement_tag // empty' "${manifest_path}")"
-          if [[ -z "${tag_name}" ]]; then
+          manifest_tag="$(jq -r '.announcement_tag // empty' "${manifest_path}")"
+          if [[ -z "${manifest_tag}" ]]; then
             echo "Unable to determine announcement tag from ${manifest_path}"
             exit 1
           fi
-          echo "TAG_NAME=${tag_name}" >> "$GITHUB_ENV"
+          if [[ "${manifest_tag}" != "${TAG_NAME}" ]]; then
+            echo "Release tag mismatch: workflow_run=${TAG_NAME}, manifest=${manifest_tag}"
+            exit 1
+          fi
 
           while IFS= read -r file; do
             name="$(basename "${file}")"
@@ -83,6 +96,33 @@ jobs:
             fi
             cp "${file}" "${destination}"
           done < <(find downloaded-artifacts -type f ! -name 'dist-manifest.json' ! -name '*-dist-manifest.json')
+
+      - name: Rewrite installer download URLs to SiFli CDN
+        if: ${{ steps.config.outputs.enabled == 'true' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const artifactsDir = 'artifacts';
+            const cdnBase = process.env.CDN_BASE;
+            const releasePattern = /https:\/\/github\.com\/.+?\/releases\/download\//g;
+
+            for (const fileName of fs.readdirSync(artifactsDir)) {
+              if (!/installer\.(sh|ps1)$/.test(fileName)) {
+                continue;
+              }
+
+              const filePath = path.join(artifactsDir, fileName);
+              const original = fs.readFileSync(filePath, 'utf8');
+              const rewritten = original.replace(releasePattern, cdnBase);
+
+              if (rewritten !== original) {
+                fs.writeFileSync(filePath, rewritten, 'utf8');
+                core.info(`Rewrote ${fileName}`);
+              }
+            }
 
       - name: Upload release assets to SiFli CDN
         if: ${{ steps.config.outputs.enabled == 'true' }}
@@ -97,3 +137,40 @@ jobs:
           delete_remote: true
           flush_url: ${{ env.COS_DOWNLOAD_FLUSH_URL }}
           working_directory: artifacts
+
+      - name: Update GitHub release metadata
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CDN_ENABLED: ${{ steps.config.outputs.enabled }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const repo = process.env.GITHUB_REPOSITORY;
+            const tag = process.env.TAG_NAME;
+            const cdnEnabled = process.env.CDN_ENABLED === 'true';
+            const cdnBase = process.env.CDN_BASE;
+
+            const { data: release } = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag,
+            });
+
+            let body = release.body ?? '';
+            if (cdnEnabled) {
+              body = body.replace(/https:\/\/github\.com\/.+?\/releases\/download\//g, cdnBase);
+            }
+            body = body.replace(/--repo probe-rs\/probe-rs/g, `--repo ${repo}`);
+            body = body.replace(
+              /https:\/\/github\.com\/probe-rs\/probe-rs\/attestations/g,
+              `https://github.com/${repo}/attestations`,
+            );
+
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: release.id,
+              body,
+              prerelease: false,
+            });
