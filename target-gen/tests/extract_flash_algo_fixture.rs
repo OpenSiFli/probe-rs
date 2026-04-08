@@ -40,7 +40,10 @@ fn extract_flash_algo_pic_zero_vma_fixture() {
             size: 0x8,
         }]
     );
-    assert_eq!(algo.flash_properties.address_range, 0x0800_0000..0x0800_1000);
+    assert_eq!(
+        algo.flash_properties.address_range,
+        0x0800_0000..0x0800_1000
+    );
     assert_eq!(algo.flash_properties.page_size, 0x100);
 }
 
@@ -72,6 +75,9 @@ fn extract_flash_algo_pic_nonzero_vma_fixture() {
             size: 0x8,
         }]
     );
-    assert_eq!(algo.flash_properties.address_range, 0x0800_0000..0x0800_1000);
+    assert_eq!(
+        algo.flash_properties.address_range,
+        0x0800_0000..0x0800_1000
+    );
     assert_eq!(algo.flash_properties.page_size, 0x100);
 }

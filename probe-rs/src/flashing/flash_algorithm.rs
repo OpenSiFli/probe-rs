@@ -1080,15 +1080,8 @@ mod test {
     #[test]
     fn rebase_runtime_address_rejects_slot_value_below_link_time_base() {
         let mut bytes = 0x1000u32.to_le_bytes().to_vec();
-        let err = rebase_runtime_address(
-            0,
-            false,
-            &mut bytes,
-            0x2000_0004,
-            0x1010,
-            0x1020,
-        )
-        .unwrap_err();
+        let err =
+            rebase_runtime_address(0, false, &mut bytes, 0x2000_0004, 0x1010, 0x1020).unwrap_err();
 
         assert!(matches!(
             err,

@@ -1,6 +1,9 @@
 use crate::flash_device::FlashDevice;
 use anyhow::{Context, Result, anyhow};
-use probe_rs_target::{FlashAlgorithmRelocationRange, FlashProperties, MemoryRange, RawFlashAlgorithm, SectorDescription};
+use probe_rs_target::{
+    FlashAlgorithmRelocationRange, FlashProperties, MemoryRange, RawFlashAlgorithm,
+    SectorDescription,
+};
 
 /// Extract a chunk of data from an ELF binary.
 ///
@@ -76,7 +79,8 @@ pub fn extract_flash_algo(
     // Extract binary blob.
     let algorithm_binary = crate::algorithm_binary::AlgorithmBinary::new(&elf, buffer)?;
     algo.instructions = algorithm_binary.blob();
-    algo.address_relocation_ranges = compact_relocation_ranges(&algorithm_binary.address_relocations);
+    algo.address_relocation_ranges =
+        compact_relocation_ranges(&algorithm_binary.address_relocations);
 
     let code_section_offset = algorithm_binary.code_section.start;
 
@@ -166,7 +170,10 @@ fn compact_relocation_ranges(
         return Vec::new();
     }
 
-    let mut offsets: Vec<_> = relocations.iter().map(|relocation| u64::from(relocation.offset)).collect();
+    let mut offsets: Vec<_> = relocations
+        .iter()
+        .map(|relocation| u64::from(relocation.offset))
+        .collect();
     offsets.sort_unstable();
     offsets.dedup();
 
