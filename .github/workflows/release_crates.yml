@@ -4,7 +4,7 @@
 
 on:
   pull_request:
-    branches: [master, release/**]
+    branches: [master]
     types: [closed]
   workflow_dispatch:
 
@@ -37,6 +37,20 @@ jobs:
         run: |
           curl -LsSf https://github.com/crate-ci/cargo-release/releases/download/v0.24.8/cargo-release-v0.24.8-x86_64-unknown-linux-gnu.tar.gz | tar xzf - -C ${CARGO_HOME:-~/.cargo}/bin
 
+      - name: Validate release source branch
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            if [ "${{ github.event.pull_request.base.ref }}" != "master" ]; then
+              echo "Release PRs must merge into master."
+              echo "PR base ref: ${{ github.event.pull_request.base.ref }}"
+              exit 1
+            fi
+          elif [ "${{ github.ref_name }}" != "master" ]; then
+            echo "Manual release tagging is only supported from master."
+            echo "Selected ref name: ${{ github.ref_name }}"
+            exit 1
+          fi
+
       - name: Install SSH
         run: |
           sudo apt-get update -y && sudo apt-get install openssh-client -y
@@ -64,15 +78,9 @@ jobs:
         # The tag prefix is set to an empty string, so that the tag is just the version number, and doesn't contain the crate name.
       - name: Create and push release tags
         run: |
-          # Checkout appropriate branch based on trigger type
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            # For PR merge, checkout the PR's target branch
-            echo "Checking out PR target branch: ${{ github.event.pull_request.base.ref }}"
-            git checkout ${{ github.event.pull_request.base.ref }}
-          else
-            # For workflow_dispatch, stay on current branch (let user choose)
-            echo "Running on current branch: $(git branch --show-current)"
-          fi
+          # Always tag from the current master branch to keep the downstream release flow single-tracked.
+          git fetch origin master
+          git checkout -B master origin/master
 
           # crates.io publishing is disabled in this fork.
           # echo "::group::Setup auth for crates.io"

@@ -51,6 +51,15 @@ jobs:
           git fetch --unshallow
           git fetch --tags
 
+      - name: Validate release source branch
+        run: |
+          if [[ "${{ github.ref_type }}" != "branch" || "${{ github.ref_name }}" != "master" ]]; then
+            echo "Downstream releases must be started from the master branch."
+            echo "Selected ref type: ${{ github.ref_type }}"
+            echo "Selected ref name: ${{ github.ref_name }}"
+            exit 1
+          fi
+
       - name: Prepare release version
         run: |
           base_version="${{ inputs.version }}"
@@ -71,7 +80,7 @@ jobs:
           branch_version="$(printf '%s' "$full_version" | sed -E 's#[^A-Za-z0-9._-]+#-#g')"
           branch_version="${branch_version#.}"
           branch_version="${branch_version#-}"
-          branch_name="release/${branch_version}"
+          branch_name="create-release/${branch_version}"
 
           echo "FULL_VERSION=${full_version}" >> "$GITHUB_ENV"
           echo "BRANCH_NAME=${branch_name}" >> "$GITHUB_ENV"
@@ -118,19 +127,7 @@ jobs:
 
       - name: create pull request
         run: |
-          # Strip the prerelease suffix before deciding the target branch.
-          version_core="${FULL_VERSION}"
-          version_core="${version_core%%-*}"
-          IFS='.' read -ra version <<< "$version_core"
-          # PR patch version releases against the corresponding release/x.y branch
-          # and all other versions against master.
-          if [[ "${version[2]}" == "0" ]]
-          then
-            branch="master"
-          else
-            branch="release/${version[0]}.${version[1]}"
-          fi
-          gh pr create -B "$branch" -H "${BRANCH_NAME}"\
+          gh pr create -B "master" -H "${BRANCH_NAME}"\
             --title "Release ${FULL_VERSION}"\
             --label "release"\
             --label "changelog:skip"\

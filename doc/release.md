@@ -22,11 +22,13 @@
 
 3. Resolve merge conflicts on the generated `sync/<upstream-ref>` branch and refresh any OpenSiFli-only patches that still need to live downstream.
 
-4. Run CI and the SiFli-specific smoke checks on the sync branch.
+4. Run CI and any additional downstream validation on the sync branch.
 
 5. Open a PR from the sync branch into `OpenSiFli/master`. Keep the merge commit created by `sync-upstream`; it is the audit point that shows which upstream version was pulled in.
 
 6. After the PR is merged, `OpenSiFli/master` becomes the new release base.
+
+`sync-upstream` defaults to `OpenSiFli/master`. It still accepts `--base-ref` as an advanced escape hatch, but the documented downstream flow stays on `master`.
 
 ## Releasing from OpenSiFli/master
 
@@ -34,7 +36,7 @@ Once the sync PR is merged and `OpenSiFli/master` is green, run the release flow
 
 1. Run `cargo xtask fetch-prs` and make sure the changelog fragments are complete.
 
-2. Run `cargo xtask release <version>` from `master` or from the matching `release/x.y` branch for patch releases.
+2. Run `cargo xtask release <version>` from `master`.
 
 3. Review the generated release PR, fix anything that failed validation, then merge it.
 
@@ -44,12 +46,14 @@ Once the sync PR is merged and `OpenSiFli/master` is green, run the release flow
    - build and publish release artifacts via `v-release.yml`
    - sync those artifacts to the SiFli mirror
 
+Historical `release/*` branches are retired in this fork. Do not use them for new downstream releases, and remove any leftovers once nothing depends on them.
+
 ## Required changelog entry for PRs
 
 Generally we require a changelog entry for each PR. If for good reason it is omitted but still required for the release, please add a `changelog:need` label to make CI pass. If the change is purely maintenance-related, use `changelog:skip`.
 
 ## Automation reference
 
-- `start-release.yml`: manually opens a release PR after bumping versions and rotating the changelog.
-- `release_crates.yml`: creates and pushes the release tags after the release PR is merged.
+- `start-release.yml`: manually opens a release PR from `master` after bumping versions and rotating the changelog.
+- `release_crates.yml`: creates and pushes the release tags after the release PR is merged into `master`.
 - `v-release.yml`: builds distributable artifacts, publishes the GitHub release, and mirrors the release payload to SiFli.

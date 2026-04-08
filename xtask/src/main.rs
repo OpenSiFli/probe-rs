@@ -44,7 +44,7 @@ enum Cli {
         /// Upstream remote to fetch before creating the sync branch.
         #[arg(long, default_value = "probe-rs")]
         upstream_remote: String,
-        /// Base ref for the OpenSiFli release branch.
+        /// Base ref for the OpenSiFli branch used to start the sync.
         #[arg(long, default_value = "OpenSiFli/master")]
         base_ref: String,
         /// Local branch name to create. Defaults to sync/<upstream-ref>.
@@ -119,27 +119,30 @@ fn fetch_prs() -> Result<()> {
 fn create_release_pr(version: String, prerelease: Option<String>) -> Result<()> {
     let sh = Shell::new()?;
 
-    // Make sure we are on the right branch and we have the latest state pulled from our source of truth, GH.
+    // Downstream releases always start from the master branch.
 
     let branch = cmd!(sh, "git branch --show-current")
         .read()?
         .trim()
         .to_string();
 
-    if branch != "master" && !branch.starts_with("release/") {
-        bail!(
-            "Invalid current branch '{branch}'. Make sure you're either on `master` or a `release/*` branch."
-        )
+    if branch != "master" {
+        bail!("Invalid current branch '{branch}'. Downstream releases must start from `master`.")
     }
-
-    let mut command =
-        format!("gh workflow run 'Open a release PR' --ref {branch} -f version={version}");
 
     if let Some(prerelease) = prerelease {
-        write!(&mut command, " -f prerelease={prerelease}")?;
+        cmd!(
+            sh,
+            "gh workflow run 'Open a release PR' --ref {branch} -f version={version} -f prerelease={prerelease}"
+        )
+        .run()?;
+    } else {
+        cmd!(
+            sh,
+            "gh workflow run 'Open a release PR' --ref {branch} -f version={version}"
+        )
+        .run()?;
     }
-
-    cmd!(sh, "{command}").run()?;
 
     Ok(())
 }
@@ -814,8 +817,8 @@ mod tests {
             "sync/probe-rs-master"
         );
         assert_eq!(
-            default_sync_branch_name("refs/heads/release/0.30"),
-            "sync/release-0.30"
+            default_sync_branch_name("refs/heads/upstream/v0.30-maint"),
+            "sync/upstream-v0.30-maint"
         );
     }
 
