@@ -559,7 +559,7 @@ fn rebase_runtime_address(
 ) -> Result<(), FlashError> {
     let instruction_len = instructions.len() as u64;
     let offset_end = offset.saturating_add(4);
-    let aligned = (offset % 4) == 0;
+    let aligned = offset.is_multiple_of(4);
     let in_bounds = offset_end <= instruction_len;
 
     if !aligned || !in_bounds {

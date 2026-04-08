@@ -1042,40 +1042,39 @@ mod tests {
             .await
             .unwrap();
 
-        let mut target_output_files =
-            HashMap::from([(ChannelIdentifier::Uart("uart".to_string()), file)]);
+        {
+            let mut target_output_files =
+                HashMap::from([(ChannelIdentifier::Uart("uart".to_string()), file)]);
 
-        let mut client = CliRttClient {
-            handle: dummy_rtt_key(),
-            channel_processors: vec![],
-            uart_channel_processor: None,
-            log_format: None,
-            show_timestamps: false,
-            show_location: false,
-            timestamp_offset: None,
-            defmt_data: None,
-        };
-        let mut client_ref = Some(&mut client);
+            let mut client = CliRttClient {
+                handle: dummy_rtt_key(),
+                channel_processors: vec![],
+                uart_channel_processor: None,
+                log_format: None,
+                show_timestamps: false,
+                show_location: false,
+                timestamp_offset: None,
+                defmt_data: None,
+            };
+            let mut client_ref = Some(&mut client);
 
-        print_monitor_event(
-            &mut client_ref,
-            MonitorEvent::UartConsole(UartConsoleEvent::Discovered {
-                channel_name: "uart".to_string(),
-            }),
-            &mut target_output_files,
-        )
-        .await;
-        print_monitor_event(
-            &mut client_ref,
-            MonitorEvent::UartConsole(UartConsoleEvent::Output {
-                bytes: b"hello from uart\n".to_vec(),
-            }),
-            &mut target_output_files,
-        )
-        .await;
-
-        drop(client_ref);
-        drop(target_output_files);
+            print_monitor_event(
+                &mut client_ref,
+                MonitorEvent::UartConsole(UartConsoleEvent::Discovered {
+                    channel_name: "uart".to_string(),
+                }),
+                &mut target_output_files,
+            )
+            .await;
+            print_monitor_event(
+                &mut client_ref,
+                MonitorEvent::UartConsole(UartConsoleEvent::Output {
+                    bytes: b"hello from uart\n".to_vec(),
+                }),
+                &mut target_output_files,
+            )
+            .await;
+        }
 
         let written = tokio::fs::read_to_string(&path).await.unwrap();
         assert_eq!(written, "hello from uart\n");

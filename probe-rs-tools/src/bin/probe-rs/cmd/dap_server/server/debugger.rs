@@ -1935,9 +1935,10 @@ mod test {
         let console = probe
             .take_aux_channels()
             .into_iter()
-            .find_map(|channel| match channel {
-                ProbeAuxChannel::SifliUartConsole(console) => Some(console),
+            .map(|channel| match channel {
+                ProbeAuxChannel::SifliUartConsole(console) => console,
             })
+            .next()
             .unwrap();
 
         (console, writer)
