@@ -27,7 +27,9 @@ permissions:
 
 jobs:
   sync-release-assets:
-    if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' }}
+    # The Release workflow runs for both PR validation and tag pushes.
+    # Mirror sync must only follow the successful tag-push release runs.
+    if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
     runs-on: ubuntu-latest
     env:
       COS_DOWNLOAD_SECRET_ID: ${{ secrets.COS_DOWNLOAD_SECRET_ID }}
