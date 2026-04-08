@@ -28,7 +28,7 @@ thiserror.workspace = true
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 tracing = "0.1.44"
 libtest-mimic = "0.8.1"
-smoke_tester_macros = { version = "0.31.1-sifli", path = "../smoke-tester-macros" }
+smoke_tester_macros = { version = "0.31.2-sifli", path = "../smoke-tester-macros" }
 
 [lints]
 workspace = true
