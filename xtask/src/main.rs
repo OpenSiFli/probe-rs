@@ -132,9 +132,8 @@ fn create_release_pr(version: String, prerelease: Option<String>) -> Result<()> 
         )
     }
 
-    let mut command = format!(
-        "gh workflow run 'Open a release PR' --ref {branch} -f version={version}"
-    );
+    let mut command =
+        format!("gh workflow run 'Open a release PR' --ref {branch} -f version={version}");
 
     if let Some(prerelease) = prerelease {
         write!(&mut command, " -f prerelease={prerelease}")?;

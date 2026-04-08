@@ -88,16 +88,10 @@ pub struct RawFlashAlgorithm {
     #[serde(serialize_with = "hex_u_int")]
     pub data_section_offset: u64,
     /// Offset from the start of RAM to the static base used for PIC data references.
-    #[serde(
-        default,
-        serialize_with = "hex_option"
-    )]
+    #[serde(default, serialize_with = "hex_option")]
     pub static_base_offset: Option<u64>,
     /// Link-time base address of the runtime image for position independent algorithms.
-    #[serde(
-        default,
-        serialize_with = "hex_option"
-    )]
+    #[serde(default, serialize_with = "hex_option")]
     pub link_time_base_address: Option<u64>,
     /// Relocation ranges inside `instructions` that must be rebased to the runtime load
     /// address when the algorithm is position independent.
