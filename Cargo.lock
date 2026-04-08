@@ -2893,7 +2893,7 @@ dependencies = [
 
 [[package]]
 name = "probe-rs"
-version = "0.31.1-sifli"
+version = "0.31.2-sifli"
 dependencies = [
  "anyhow",
  "async-io",
@@ -2937,7 +2937,7 @@ dependencies = [
 
 [[package]]
 name = "probe-rs-debug"
-version = "0.31.1-sifli"
+version = "0.31.2-sifli"
 dependencies = [
  "addr2line",
  "bitfield",
@@ -2967,7 +2967,7 @@ dependencies = [
 
 [[package]]
 name = "probe-rs-target"
-version = "0.31.1-sifli"
+version = "0.31.2-sifli"
 dependencies = [
  "base64",
  "indexmap",
@@ -2980,7 +2980,7 @@ dependencies = [
 
 [[package]]
 name = "probe-rs-tools"
-version = "0.31.1-sifli"
+version = "0.31.2-sifli"
 dependencies = [
  "addr2line",
  "ansi-parser",
@@ -3412,7 +3412,7 @@ checksum = "6c20b6793b5c2fa6553b250154b78d6d0db37e72700ae35fad9387a46f487c97"
 
 [[package]]
 name = "rtthost"
-version = "0.31.1-sifli"
+version = "0.31.2-sifli"
 dependencies = [
  "anyhow",
  "clap",
@@ -3906,7 +3906,7 @@ checksum = "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03"
 
 [[package]]
 name = "smoke_tester"
-version = "0.31.1-sifli"
+version = "0.31.2-sifli"
 dependencies = [
  "anyhow",
  "clap",
@@ -3925,7 +3925,7 @@ dependencies = [
 
 [[package]]
 name = "smoke_tester_macros"
-version = "0.31.1-sifli"
+version = "0.31.2-sifli"
 dependencies = [
  "proc-macro-error2",
  "proc-macro2",
@@ -4087,7 +4087,7 @@ checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
 
 [[package]]
 name = "target-gen"
-version = "0.31.1-sifli"
+version = "0.31.2-sifli"
 dependencies = [
  "anyhow",
  "clap",
@@ -5350,7 +5350,7 @@ checksum = "32ac00cd3f8ec9c1d33fb3e7958a82df6989c42d747bd326c822b1d625283547"
 
 [[package]]
 name = "xtask"
-version = "0.31.1-sifli"
+version = "0.31.2-sifli"
 dependencies = [
  "anyhow",
  "clap",
