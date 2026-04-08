@@ -54,7 +54,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p downloaded-artifacts
-          gh run download "${{ github.event.workflow_run.id }}" --dir downloaded-artifacts
+          gh run download "${{ github.event.workflow_run.id }}" --repo "${{ github.repository }}" --dir downloaded-artifacts
 
       - name: Merge dist release artifacts
         if: ${{ steps.config.outputs.enabled == 'true' }}
