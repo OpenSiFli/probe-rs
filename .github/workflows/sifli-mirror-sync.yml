@@ -124,7 +124,7 @@ jobs:
               }
             }
 
-      - name: Upload release assets to SiFli CDN
+      - name: Upload release assets to SiFli CDN tag directory
         if: ${{ steps.config.outputs.enabled == 'true' }}
         uses: OpenSiFli/SiFliMirrorSync@v1
         with:
@@ -134,6 +134,22 @@ jobs:
           bucket: ${{ env.COS_DOWNLOAD_BUCKET }}
           prefix: github_assets/OpenSiFli/probe-rs/releases/download/${{ env.TAG_NAME }}/
           artifacts: .
+          global: true
+          delete_remote: true
+          flush_url: ${{ env.COS_DOWNLOAD_FLUSH_URL }}
+          working_directory: artifacts
+
+      - name: Upload release assets to SiFli CDN latest directory
+        if: ${{ steps.config.outputs.enabled == 'true' }}
+        uses: OpenSiFli/SiFliMirrorSync@v1
+        with:
+          secret_id: ${{ env.COS_DOWNLOAD_SECRET_ID }}
+          secret_key: ${{ env.COS_DOWNLOAD_SECRET_KEY }}
+          region: ${{ env.COS_DOWNLOAD_REGION }}
+          bucket: ${{ env.COS_DOWNLOAD_BUCKET }}
+          prefix: github_assets/OpenSiFli/probe-rs/releases/download/latest/
+          artifacts: .
+          global: true
           delete_remote: true
           flush_url: ${{ env.COS_DOWNLOAD_FLUSH_URL }}
           working_directory: artifacts
